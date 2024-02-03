@@ -11,18 +11,40 @@ import {
   Card,
   Inset,
 } from "@radix-ui/themes";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import Unsplash from "./services/unsplash";
+
+interface Image {
+  id: string;
+  urls: {
+    small: string;
+  };
+  alt_description: string;
+}
 
 function App() {
   const searchInput = useRef<HTMLInputElement | null>(null);
+  const [images, setImages] = useState([]);
+  const [totalPages, setTotalPages] = useState(0);
+
+  const searchPhotos = async (data: string) => {
+    try {
+      const response = await Unsplash.searchPhotos(data);
+      setImages(response.data.results);
+      setTotalPages(response.data.total_pages);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const handleSearch = (event: { preventDefault: () => void }) => {
     event.preventDefault();
-    console.log(searchInput.current?.value);
+    searchPhotos(searchInput.current?.value || "");
   };
 
   const handleSelection = (selection: string) => {
     if (searchInput.current) searchInput.current.value = selection;
+    searchPhotos(searchInput.current?.value || "");
   };
 
   return (
@@ -61,108 +83,27 @@ function App() {
           </Flex>
         </form>
         <Grid columns={{ initial: "2" }} gap="3" width="auto" mt="4">
-          <Box>
-            <Card>
-              <Inset clip="padding-box">
-                <img
-                  src="https://images.unsplash.com/photo-1617050318658-a9a3175e34cb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
-                  alt="Bold typography"
-                  style={{
-                    display: "block",
-                    objectFit: "cover",
-                    width: "100%",
-                    height: 140,
-                    backgroundColor: "var(--gray-5)",
-                  }}
-                />
-              </Inset>
-            </Card>
-          </Box>
-          <Box>
-            <Card>
-              <Inset clip="padding-box">
-                <img
-                  src="https://images.unsplash.com/photo-1617050318658-a9a3175e34cb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
-                  alt="Bold typography"
-                  style={{
-                    display: "block",
-                    objectFit: "cover",
-                    width: "100%",
-                    height: 140,
-                    backgroundColor: "var(--gray-5)",
-                  }}
-                />
-              </Inset>
-            </Card>
-          </Box>
-          <Box>
-            <Card>
-              <Inset clip="padding-box">
-                <img
-                  src="https://images.unsplash.com/photo-1617050318658-a9a3175e34cb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
-                  alt="Bold typography"
-                  style={{
-                    display: "block",
-                    objectFit: "cover",
-                    width: "100%",
-                    height: 140,
-                    backgroundColor: "var(--gray-5)",
-                  }}
-                />
-              </Inset>
-            </Card>
-          </Box>
-          <Box>
-            <Card>
-              <Inset clip="padding-box">
-                <img
-                  src="https://images.unsplash.com/photo-1617050318658-a9a3175e34cb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
-                  alt="Bold typography"
-                  style={{
-                    display: "block",
-                    objectFit: "cover",
-                    width: "100%",
-                    height: 140,
-                    backgroundColor: "var(--gray-5)",
-                  }}
-                />
-              </Inset>
-            </Card>
-          </Box>
-          <Box>
-            <Card>
-              <Inset clip="padding-box">
-                <img
-                  src="https://images.unsplash.com/photo-1617050318658-a9a3175e34cb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
-                  alt="Bold typography"
-                  style={{
-                    display: "block",
-                    objectFit: "cover",
-                    width: "100%",
-                    height: 140,
-                    backgroundColor: "var(--gray-5)",
-                  }}
-                />
-              </Inset>
-            </Card>
-          </Box>
-          <Box>
-            <Card>
-              <Inset clip="padding-box">
-                <img
-                  src="https://images.unsplash.com/photo-1617050318658-a9a3175e34cb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
-                  alt="Bold typography"
-                  style={{
-                    display: "block",
-                    objectFit: "cover",
-                    width: "100%",
-                    height: 140,
-                    backgroundColor: "var(--gray-5)",
-                  }}
-                />
-              </Inset>
-            </Card>
-          </Box>
+          {images.map((image: Image) => {
+            return (
+              <Box key={image.id}>
+                <Card>
+                  <Inset clip="padding-box">
+                    <img
+                      src={image.urls.small}
+                      alt={image.alt_description}
+                      style={{
+                        display: "block",
+                        objectFit: "cover",
+                        width: "100%",
+                        height: 140,
+                        backgroundColor: "var(--gray-5)",
+                      }}
+                    />
+                  </Inset>
+                </Card>
+              </Box>
+            );
+          })}
         </Grid>
       </Container>
     </>
