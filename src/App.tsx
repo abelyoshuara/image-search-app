@@ -33,14 +33,20 @@ function App() {
   const [images, setImages] = useState<Image[]>([]);
   const [totalPages, setTotalPages] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const searchPhotos = useCallback(async (data: string, page: number) => {
+  const searchPhotos = useCallback((data: string, page: number) => {
     try {
-      const response = await Unsplash.searchPhotos(data, page);
-      setImages(response.data.results);
-      setTotalPages(response.data.total_pages);
+      const timeout = setTimeout(async () => {
+        const response = await Unsplash.searchPhotos(data, page);
+        setImages(response.data.results);
+        setTotalPages(response.data.total_pages);
+        setLoading(false);
+      }, 1000);
+      return () => clearTimeout(timeout);
     } catch (error) {
       console.error("Error fetching data: ", error);
+      setLoading(false);
     }
   }, []);
 
@@ -50,12 +56,14 @@ function App() {
 
   const handleSearch = (event: { preventDefault: () => void }) => {
     event.preventDefault();
+    setLoading(true);
     searchPhotos(searchInput.current?.value || "", page);
     setPage(1);
   };
 
   const handleSelection = (selection: string) => {
     if (searchInput.current) searchInput.current.value = selection;
+    setLoading(true);
     searchPhotos(searchInput.current?.value || "", page);
     setPage(1);
   };
@@ -95,35 +103,48 @@ function App() {
             </Badge>
           </Flex>
         </form>
-        <Grid columns={{ initial: "2" }} gap="3" width="auto" mt="4">
-          {images.map((image: Image) => {
-            return (
-              <Box key={image.id}>
-                <Card>
-                  <Inset clip="padding-box">
-                    <img
-                      src={image.urls.small}
-                      alt={image.alt_description}
-                      style={{
-                        display: "block",
-                        objectFit: "cover",
-                        width: "100%",
-                        height: 140,
-                        backgroundColor: "var(--gray-5)",
-                      }}
-                    />
-                  </Inset>
-                </Card>
-              </Box>
-            );
-          })}
-        </Grid>
+        {loading ? (
+          <Grid columns={{ initial: "2" }} gap="3" width="auto" mt="4">
+            {[...Array(20)].map((_, index) => {
+              return <SkeletonLoading key={index} />;
+            })}
+          </Grid>
+        ) : (
+          <>
+            <Grid columns={{ initial: "2" }} gap="3" width="auto" mt="4">
+              {images.map((image: Image) => {
+                return (
+                  <Box key={image.id}>
+                    <Card>
+                      <Inset clip="padding-box">
+                        <img
+                          src={image.urls.small}
+                          alt={image.alt_description}
+                          style={{
+                            display: "block",
+                            objectFit: "cover",
+                            width: "100%",
+                            height: 140,
+                            backgroundColor: "var(--gray-5)",
+                          }}
+                        />
+                      </Inset>
+                    </Card>
+                  </Box>
+                );
+              })}
+            </Grid>
+          </>
+        )}
         {totalPages > 0 && (
           <Flex gap="2" mt="6" justify="center">
             {page > 1 && (
               <Button
                 variant="soft"
-                onClick={() => setPage(page - 1)}
+                onClick={() => {
+                  setPage(page - 1);
+                  setLoading(true);
+                }}
                 aria-label="Previous page"
               >
                 <ArrowLeftIcon />
@@ -133,7 +154,10 @@ function App() {
             {page < totalPages && (
               <Button
                 variant="soft"
-                onClick={() => setPage(page + 1)}
+                onClick={() => {
+                  setPage(page + 1);
+                  setLoading(true);
+                }}
                 aria-label="Next page"
               >
                 Next <ArrowRightIcon />
