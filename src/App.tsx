@@ -1,4 +1,8 @@
-import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  MagnifyingGlassIcon,
+} from "@radix-ui/react-icons";
 import {
   Heading,
   Container,
@@ -10,9 +14,11 @@ import {
   Box,
   Card,
   Inset,
+  Button,
 } from "@radix-ui/themes";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Unsplash from "./services/unsplash";
+import SkeletonLoading from "./components/SkeletonLoading";
 
 interface Image {
   id: string;
@@ -24,27 +30,34 @@ interface Image {
 
 function App() {
   const searchInput = useRef<HTMLInputElement | null>(null);
-  const [images, setImages] = useState([]);
-  const [totalPages, setTotalPages] = useState(0);
+  const [images, setImages] = useState<Image[]>([]);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [page, setPage] = useState<number>(1);
 
-  const searchPhotos = async (data: string) => {
+  const searchPhotos = useCallback(async (data: string, page: number) => {
     try {
-      const response = await Unsplash.searchPhotos(data);
+      const response = await Unsplash.searchPhotos(data, page);
       setImages(response.data.results);
       setTotalPages(response.data.total_pages);
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching data: ", error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    searchPhotos(searchInput.current?.value || "", page);
+  }, [page, searchPhotos]);
 
   const handleSearch = (event: { preventDefault: () => void }) => {
     event.preventDefault();
-    searchPhotos(searchInput.current?.value || "");
+    searchPhotos(searchInput.current?.value || "", page);
+    setPage(1);
   };
 
   const handleSelection = (selection: string) => {
     if (searchInput.current) searchInput.current.value = selection;
-    searchPhotos(searchInput.current?.value || "");
+    searchPhotos(searchInput.current?.value || "", page);
+    setPage(1);
   };
 
   return (
@@ -105,6 +118,29 @@ function App() {
             );
           })}
         </Grid>
+        {totalPages > 0 && (
+          <Flex gap="2" mt="6" justify="center">
+            {page > 1 && (
+              <Button
+                variant="soft"
+                onClick={() => setPage(page - 1)}
+                aria-label="Previous page"
+              >
+                <ArrowLeftIcon />
+                Prev
+              </Button>
+            )}
+            {page < totalPages && (
+              <Button
+                variant="soft"
+                onClick={() => setPage(page + 1)}
+                aria-label="Next page"
+              >
+                Next <ArrowRightIcon />
+              </Button>
+            )}
+          </Flex>
+        )}
       </Container>
     </>
   );

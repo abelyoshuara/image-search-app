@@ -1,9 +1,10 @@
 import http from "../utils/http-common";
 const clientId = import.meta.env.VITE_ACCESS_KEY;
+const perPage = 20;
 
-const searchPhotos = (query: string) => {
+const searchPhotos = (query: string, page: number) => {
   return http.get(
-    `/search/photos?page=1&per_page=20&query=${query}&client_id=${clientId}`,
+    `/search/photos?page=${page}&per_page=${perPage}&query=${query}&client_id=${clientId}`,
   );
 };
 
