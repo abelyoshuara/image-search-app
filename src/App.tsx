@@ -70,13 +70,13 @@ function App() {
 
   return (
     <>
-      <Container my="9" size="1">
-        <Heading align="center" mb="1">
-          Image Search App
-        </Heading>
-        <Text align="center" mb="4" as="p" color="gray">
-          Images retrieved from Unsplash API
-        </Text>
+      <Heading align="center" mb="1" mt="9">
+        Image Search App
+      </Heading>
+      <Text align="center" mb="4" as="p" color="gray">
+        Images retrieved from Unsplash API
+      </Text>
+      <Container size="1">
         <form onSubmit={handleSearch}>
           <TextField.Root>
             <TextField.Slot>
@@ -103,15 +103,27 @@ function App() {
             </Badge>
           </Flex>
         </form>
+      </Container>
+      <Container size={{ initial: "1", sm: "2", md: "3" }} mb="9">
         {loading ? (
-          <Grid columns={{ initial: "2" }} gap="3" width="auto" mt="4">
+          <Grid
+            columns={{ initial: "2", sm: "3", md: "4" }}
+            gap="3"
+            width="auto"
+            mt="4"
+          >
             {[...Array(20)].map((_, index) => {
               return <SkeletonLoading key={index} />;
             })}
           </Grid>
         ) : (
           <>
-            <Grid columns={{ initial: "2" }} gap="3" width="auto" mt="4">
+            <Grid
+              columns={{ initial: "2", sm: "3", md: "4" }}
+              gap="3"
+              width="auto"
+              mt="4"
+            >
               {images.map((image: Image) => {
                 return (
                   <Box key={image.id}>
