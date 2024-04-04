@@ -29,7 +29,7 @@ function App() {
           totalPages: response.data.total_pages,
           isLoading: false,
         }));
-      }, 1000);
+      }, 500);
 
       return () => clearTimeout(timeout);
     } catch (error) {
