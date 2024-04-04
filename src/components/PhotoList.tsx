@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { FC } from "react";
 import { Container, Grid } from "@radix-ui/themes";
 import SkeletonLoading from "./SkeletonLoading";
 import PhotoItem from "./PhotoItem";
-import Image from "../interfaces/image";
+import type { Image } from "../types/Image";
 
 interface PhotoListProps {
   loading: boolean;

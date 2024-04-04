@@ -5,46 +5,81 @@ import Unsplash from "./services/unsplash";
 import Header from "./components/Header";
 import SearchForm from "./components/SearchForm";
 import PhotoList from "./components/PhotoList";
-import Image from "./interfaces/image";
 
 function App() {
   const searchInput = useRef<HTMLInputElement | null>(null);
-  const [images, setImages] = useState<Image[]>([]);
-  const [totalPages, setTotalPages] = useState<number>(0);
-  const [page, setPage] = useState<number>(1);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [images, setImage] = useState({
+    data: [],
+    totalPages: 0,
+    page: 1,
+    isLoading: false,
+  });
 
   const searchPhotos = useCallback((data: string, page: number) => {
     try {
       const timeout = setTimeout(async () => {
         const response = await Unsplash.searchPhotos(data, page);
-        setImages(response.data.results);
-        setTotalPages(response.data.total_pages);
-        setLoading(false);
+        setImage((prevState) => ({
+          ...prevState,
+          data: response.data.results,
+          totalPages: response.data.total_pages,
+          isLoading: !prevState.isLoading,
+        }));
       }, 1000);
+
       return () => clearTimeout(timeout);
     } catch (error) {
       console.error("Error fetching data: ", error);
-      setLoading(false);
+
+      setImage((prevState) => ({
+        ...prevState,
+        isLoading: !prevState.isLoading,
+      }));
     }
   }, []);
 
   useEffect(() => {
-    searchPhotos(searchInput.current?.value || "", page);
-  }, [page, searchPhotos]);
+    searchPhotos(searchInput.current?.value || "", images.page);
+  }, [images.page, searchPhotos]);
 
   const handleSearch = (event: { preventDefault: () => void }) => {
     event.preventDefault();
-    setLoading(true);
-    searchPhotos(searchInput.current?.value || "", page);
-    setPage(1);
+
+    searchPhotos(searchInput.current?.value || "", images.page);
+
+    setImage((prevState) => ({
+      ...prevState,
+      page: 1,
+      isLoading: !prevState.isLoading,
+    }));
   };
 
   const handleSelection = (selection: string) => {
     if (searchInput.current) searchInput.current.value = selection;
-    setLoading(true);
-    searchPhotos(searchInput.current?.value || "", page);
-    setPage(1);
+
+    searchPhotos(searchInput.current?.value || "", images.page);
+
+    setImage((prevState) => ({
+      ...prevState,
+      page: 1,
+      isLoading: !prevState.isLoading,
+    }));
+  };
+
+  const handlePrevious = () => {
+    setImage((prevState) => ({
+      ...prevState,
+      page: prevState.page - 1,
+      isLoading: !prevState.isLoading,
+    }));
+  };
+
+  const handleNext = () => {
+    setImage((prevState) => ({
+      ...prevState,
+      page: prevState.page + 1,
+      isLoading: !prevState.isLoading,
+    }));
   };
 
   return (
@@ -55,31 +90,21 @@ function App() {
         onSearchFormRef={handleSelection}
         onSearchFormSubmit={handleSearch}
       />
-      <PhotoList loading={loading} images={images} />
-      {totalPages > 0 && (
+      <PhotoList loading={images.isLoading} images={images.data} />
+      {images.totalPages > 0 && (
         <Flex gap="2" justify="center" mt="6" mb="9">
-          {page > 1 && (
+          {images.page > 1 && (
             <Button
               variant="soft"
-              onClick={() => {
-                setPage(page - 1);
-                setLoading(true);
-              }}
+              onClick={handlePrevious}
               aria-label="Previous page"
             >
               <ArrowLeftIcon />
               Prev
             </Button>
           )}
-          {page < totalPages && (
-            <Button
-              variant="soft"
-              onClick={() => {
-                setPage(page + 1);
-                setLoading(true);
-              }}
-              aria-label="Next page"
-            >
+          {images.page < images.totalPages && (
+            <Button variant="soft" onClick={handleNext} aria-label="Next page">
               Next <ArrowRightIcon />
             </Button>
           )}
