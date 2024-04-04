@@ -1,13 +1,16 @@
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeftIcon, ArrowRightIcon } from "@radix-ui/react-icons";
 import { Flex, Button } from "@radix-ui/themes";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import Unsplash from "./services/unsplash";
 import Header from "./components/Header";
 import SearchForm from "./components/SearchForm";
 import PhotoList from "./components/PhotoList";
+import { useDebouncedCallback } from "./hooks/useDebounceCallback";
 
 function App() {
   const searchInput = useRef<HTMLInputElement | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [images, setImage] = useState({
     data: [],
     totalPages: 0,
@@ -16,6 +19,7 @@ function App() {
   });
 
   const searchPhotos = useCallback((data: string, page: number) => {
+    if (!data) return false;
     try {
       const timeout = setTimeout(async () => {
         const response = await Unsplash.searchPhotos(data, page);
@@ -23,7 +27,7 @@ function App() {
           ...prevState,
           data: response.data.results,
           totalPages: response.data.total_pages,
-          isLoading: !prevState.isLoading,
+          isLoading: false,
         }));
       }, 1000);
 
@@ -33,52 +37,77 @@ function App() {
 
       setImage((prevState) => ({
         ...prevState,
-        isLoading: !prevState.isLoading,
+        isLoading: false,
       }));
     }
   }, []);
 
   useEffect(() => {
-    searchPhotos(searchInput.current?.value || "", images.page);
-  }, [images.page, searchPhotos]);
+    const queryParam = searchParams.get("q");
 
-  const handleSearch = (event: { preventDefault: () => void }) => {
-    event.preventDefault();
+    if (queryParam) {
+      searchInput.current!.value = queryParam;
 
-    searchPhotos(searchInput.current?.value || "", images.page);
+      setImage((prevState) => ({
+        ...prevState,
+        page: prevState.page,
+        isLoading: true,
+      }));
 
-    setImage((prevState) => ({
-      ...prevState,
-      page: 1,
-      isLoading: !prevState.isLoading,
-    }));
-  };
+      setSearchParams((prevState) => ({
+        ...prevState,
+        page: String(images.page),
+        q: searchInput.current!.value,
+      }));
+    }
+
+    searchPhotos(searchInput.current!.value || "", images.page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [images.page, searchInput.current?.value, searchPhotos]);
+
+  const handleSearch = useDebouncedCallback((input: string) => {
+    if (input) {
+      searchInput.current!.value = input;
+
+      setImage((prevState) => ({
+        ...prevState,
+        page: 1,
+      }));
+
+      setSearchParams({ page: String(images.page), q: input });
+    } else {
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete("q");
+
+      setSearchParams(newSearchParams);
+      searchInput.current!.value = input;
+    }
+  }, 500);
 
   const handleSelection = (selection: string) => {
-    if (searchInput.current) searchInput.current.value = selection;
+    searchInput.current!.value = selection;
 
-    searchPhotos(searchInput.current?.value || "", images.page);
+    setSearchParams({ page: String(images.page), q: selection });
 
     setImage((prevState) => ({
       ...prevState,
       page: 1,
-      isLoading: !prevState.isLoading,
     }));
   };
 
   const handlePrevious = () => {
     setImage((prevState) => ({
       ...prevState,
-      page: prevState.page - 1,
-      isLoading: !prevState.isLoading,
+      page: images.page - 1,
+      isLoading: true,
     }));
   };
 
   const handleNext = () => {
     setImage((prevState) => ({
       ...prevState,
-      page: prevState.page + 1,
-      isLoading: !prevState.isLoading,
+      page: images.page + 1,
+      isLoading: true,
     }));
   };
 
@@ -88,7 +117,7 @@ function App() {
       <SearchForm
         input={searchInput}
         onSearchFormRef={handleSelection}
-        onSearchFormSubmit={handleSearch}
+        onInputChange={handleSearch}
       />
       <PhotoList loading={images.isLoading} images={images.data} />
       {images.totalPages > 0 && (
