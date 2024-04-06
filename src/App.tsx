@@ -9,35 +9,33 @@ import { useDebouncedCallback } from "./hooks/useDebounceCallback";
 import { generatePagination } from "./utils/pagination";
 import PaginationNumber from "./components/PaginationNumber";
 import PaginationArrow from "./components/PaginationArrow";
+import { wait } from "./utils/wait";
 
 function App() {
   const searchInput = useRef<HTMLInputElement | null>(null);
   const { pathname } = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [images, setImage] = useState({
+  const [photos, setPhotos] = useState({
     data: [],
     totalPages: 0,
     isLoading: false,
   });
 
-  const searchPhotos = useCallback((data: string, page: number) => {
+  const searchPhotos = useCallback(async (data: string, page: number) => {
     if (!data) return false;
     try {
-      const timeout = setTimeout(async () => {
-        const response = await Unsplash.searchPhotos(data, page);
-        setImage((prevState) => ({
-          ...prevState,
-          data: response.data.results,
-          totalPages: response.data.total_pages,
-          isLoading: false,
-        }));
-      }, 500);
-
-      return () => clearTimeout(timeout);
+      await wait(1000);
+      const response = await Unsplash.searchPhotos(data, page);
+      setPhotos((prevState) => ({
+        ...prevState,
+        data: response.data.results,
+        totalPages: response.data.total_pages,
+        isLoading: false,
+      }));
     } catch (error) {
       console.error("Error fetching data: ", error);
 
-      setImage((prevState) => ({
+      setPhotos((prevState) => ({
         ...prevState,
         isLoading: false,
       }));
@@ -49,7 +47,7 @@ function App() {
     const queryParamPage = Number(searchParams.get("page") || "1");
 
     if (queryParamQ) {
-      setImage((prevState) => ({
+      setPhotos((prevState) => ({
         ...prevState,
         isLoading: true,
       }));
@@ -64,7 +62,7 @@ function App() {
 
       searchPhotos(queryParamQ, Number(queryParamPage || "1"));
     } else {
-      setImage((prevState) => ({
+      setPhotos((prevState) => ({
         ...prevState,
         data: [],
         totalPages: 0,
@@ -100,7 +98,7 @@ function App() {
   };
 
   const currentPage = Number(searchParams.get("page")) || 1;
-  const totalPages = Math.ceil(images.totalPages / 20);
+  const totalPages = Math.ceil(photos.totalPages / 20);
   const allPages = generatePagination(currentPage, totalPages);
 
   return (
@@ -112,9 +110,9 @@ function App() {
         onInputChange={handleSearch}
       />
 
-      <PhotoList loading={images.isLoading} images={images.data} />
+      <PhotoList loading={photos.isLoading} photos={photos.data} />
 
-      {images.totalPages > 0 && (
+      {photos.totalPages > 0 && (
         <Flex gap="2" justify="center" mt="6" mb="9">
           {currentPage > 1 && (
             <PaginationArrow

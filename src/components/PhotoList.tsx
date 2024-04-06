@@ -1,16 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { FC } from "react";
 import { Container, Grid } from "@radix-ui/themes";
 import SkeletonLoading from "./SkeletonLoading";
 import PhotoItem from "./PhotoItem";
-import type { Image } from "../types/Image";
+import type { Photo } from "../types/Photo";
 
 interface PhotoListProps {
   loading: boolean;
-  images: Image[];
+  photos: Photo[];
 }
 
-const PhotoList: FC<PhotoListProps> = ({ loading, images }) => {
+const PhotoList: FC<PhotoListProps> = ({ loading, photos }) => {
   return (
     <Container size={{ initial: "1", sm: "2", md: "3" }}>
       {loading ? (
@@ -32,12 +31,12 @@ const PhotoList: FC<PhotoListProps> = ({ loading, images }) => {
             width="auto"
             mt="4"
           >
-            {images.map((image: Image) => {
+            {photos.map((photo) => {
               return (
                 <PhotoItem
-                  key={image.id}
-                  src={image.urls.small}
-                  alt={image.alt_description}
+                  key={photo.id}
+                  src={photo.urls.small}
+                  alt={photo.alt_description}
                 />
               );
             })}
