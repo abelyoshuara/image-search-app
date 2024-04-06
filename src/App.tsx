@@ -1,15 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeftIcon, ArrowRightIcon } from "@radix-ui/react-icons";
-import { Flex, Button } from "@radix-ui/themes";
-import { useSearchParams } from "react-router-dom";
+import { Flex } from "@radix-ui/themes";
+import { useLocation, useSearchParams } from "react-router-dom";
 import Unsplash from "./services/unsplash";
 import Header from "./components/Header";
 import SearchForm from "./components/SearchForm";
 import PhotoList from "./components/PhotoList";
 import { useDebouncedCallback } from "./hooks/useDebounceCallback";
+import { generatePagination } from "./utils/pagination";
+import PaginationNumber from "./components/PaginationNumber";
+import PaginationArrow from "./components/PaginationArrow";
 
 function App() {
   const searchInput = useRef<HTMLInputElement | null>(null);
+  const { pathname } = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [images, setImage] = useState({
     data: [],
@@ -43,38 +46,47 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const queryParam = searchParams.get("q");
+    const queryParamQ = searchParams.get("q");
+    const queryParamPage = searchParams.get("page");
 
-    if (queryParam) {
-      searchInput.current!.value = queryParam;
-
+    if (queryParamPage) {
       setImage((prevState) => ({
         ...prevState,
-        page: prevState.page,
+        page: queryParamPage ? Number(queryParamPage) : 1,
         isLoading: true,
       }));
 
       setSearchParams((prevState) => ({
         ...prevState,
-        page: String(images.page),
-        q: searchInput.current!.value,
+        page: queryParamPage || "1",
       }));
     }
 
-    searchPhotos(searchInput.current!.value || "", images.page);
+    if (queryParamQ && queryParamPage) {
+      setSearchParams((prevState) => ({
+        ...prevState,
+        page: queryParamPage || "1",
+        q: queryParamQ,
+      }));
+    }
+
+    if (searchInput.current!.value)
+      searchPhotos(searchInput.current!.value, Number(queryParamPage || "1"));
+    else
+      setImage((prevState) => ({
+        ...prevState,
+        data: [],
+        totalPages: 0,
+        isLoading: false,
+      }));
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [images.page, searchInput.current?.value, searchPhotos]);
+  }, [searchParams, searchPhotos]);
 
   const handleSearch = useDebouncedCallback((input: string) => {
     if (input) {
       searchInput.current!.value = input;
-
-      setImage((prevState) => ({
-        ...prevState,
-        page: 1,
-      }));
-
-      setSearchParams({ page: String(images.page), q: input });
+      setSearchParams({ page: "1", q: input });
     } else {
       const newSearchParams = new URLSearchParams(searchParams);
       newSearchParams.delete("q");
@@ -86,30 +98,18 @@ function App() {
 
   const handleSelection = (selection: string) => {
     searchInput.current!.value = selection;
-
-    setSearchParams({ page: String(images.page), q: selection });
-
-    setImage((prevState) => ({
-      ...prevState,
-      page: 1,
-    }));
+    setSearchParams({ page: "1", q: selection });
   };
 
-  const handlePrevious = () => {
-    setImage((prevState) => ({
-      ...prevState,
-      page: images.page - 1,
-      isLoading: true,
-    }));
+  const createPageURL = (pageNumber: number | string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", pageNumber.toString());
+    return `${pathname}?${params.toString()}`;
   };
 
-  const handleNext = () => {
-    setImage((prevState) => ({
-      ...prevState,
-      page: images.page + 1,
-      isLoading: true,
-    }));
-  };
+  const currentPage = Number(searchParams.get("page")) || 1;
+  const totalPages = Math.ceil(images.totalPages / 20);
+  const allPages = generatePagination(currentPage, totalPages);
 
   return (
     <>
@@ -119,23 +119,29 @@ function App() {
         onSearchFormRef={handleSelection}
         onInputChange={handleSearch}
       />
+
       <PhotoList loading={images.isLoading} images={images.data} />
+
       {images.totalPages > 0 && (
         <Flex gap="2" justify="center" mt="6" mb="9">
-          {images.page > 1 && (
-            <Button
-              variant="soft"
-              onClick={handlePrevious}
-              aria-label="Previous page"
-            >
-              <ArrowLeftIcon />
-              Prev
-            </Button>
+          {currentPage > 1 && (
+            <PaginationArrow
+              direction="left"
+              href={createPageURL(currentPage - 1)}
+            />
           )}
-          {images.page < images.totalPages && (
-            <Button variant="soft" onClick={handleNext} aria-label="Next page">
-              Next <ArrowRightIcon />
-            </Button>
+
+          <PaginationNumber
+            allPages={allPages}
+            currentPage={currentPage}
+            createPageURL={createPageURL}
+          />
+
+          {currentPage < totalPages && (
+            <PaginationArrow
+              direction="right"
+              href={createPageURL(currentPage + 1)}
+            />
           )}
         </Flex>
       )}
