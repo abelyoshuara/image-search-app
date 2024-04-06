@@ -6,7 +6,7 @@ export type Photo = {
   alt_description: string;
 };
 
-export type InitialPhoto = {
+export type InitialPhotos = {
   data: Photo[];
   totalPages: number;
   isLoading: boolean;
