@@ -18,6 +18,7 @@ export default function PaginationNumber({
         if (page === currentPage || page === "...") {
           return (
             <Button
+              key={index}
               variant={page === "..." ? "soft" : "solid"}
               aria-label="Current page"
             >
