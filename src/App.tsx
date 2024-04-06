@@ -17,7 +17,6 @@ function App() {
   const [images, setImage] = useState({
     data: [],
     totalPages: 0,
-    page: 1,
     isLoading: false,
   });
 
@@ -47,38 +46,31 @@ function App() {
 
   useEffect(() => {
     const queryParamQ = searchParams.get("q");
-    const queryParamPage = searchParams.get("page");
+    const queryParamPage = Number(searchParams.get("page") || "1");
 
-    if (queryParamPage) {
+    if (queryParamQ) {
       setImage((prevState) => ({
         ...prevState,
-        page: queryParamPage ? Number(queryParamPage) : 1,
         isLoading: true,
       }));
 
       setSearchParams((prevState) => ({
         ...prevState,
-        page: queryParamPage || "1",
-      }));
-    }
-
-    if (queryParamQ && queryParamPage) {
-      setSearchParams((prevState) => ({
-        ...prevState,
-        page: queryParamPage || "1",
+        page: queryParamPage.toString(),
         q: queryParamQ,
       }));
-    }
 
-    if (searchInput.current!.value)
-      searchPhotos(searchInput.current!.value, Number(queryParamPage || "1"));
-    else
+      searchInput.current!.value = queryParamQ;
+
+      searchPhotos(queryParamQ, Number(queryParamPage || "1"));
+    } else {
       setImage((prevState) => ({
         ...prevState,
         data: [],
         totalPages: 0,
         isLoading: false,
       }));
+    }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, searchPhotos]);
