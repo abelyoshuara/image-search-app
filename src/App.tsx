@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef } from "react";
 import { Flex } from "@radix-ui/themes";
 import { useLocation, useSearchParams } from "react-router-dom";
 import Unsplash from "./services/unsplash";
@@ -10,35 +10,35 @@ import { generatePagination } from "./utils/pagination";
 import PaginationNumber from "./components/PaginationNumber";
 import PaginationArrow from "./components/PaginationArrow";
 import { wait } from "./utils/wait";
+import { Action, initialPhotos, photosReducer } from "./reducers/photos";
 
 function App() {
   const searchInput = useRef<HTMLInputElement | null>(null);
   const { pathname } = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [photos, setPhotos] = useState({
-    data: [],
-    totalPages: 0,
-    isLoading: false,
-  });
+  const [photos, dispatch] = useReducer(photosReducer, initialPhotos);
 
   const searchPhotos = useCallback(async (data: string, page: number) => {
     if (!data) return false;
     try {
       await wait(1000);
       const response = await Unsplash.searchPhotos(data, page);
-      setPhotos((prevState) => ({
-        ...prevState,
-        data: response.data.results,
-        totalPages: response.data.total_pages,
-        isLoading: false,
-      }));
+      dispatch({
+        type: "SUCCESS_SEARCH_PHOTO",
+        payload: {
+          data: response.data.results,
+          totalPages: response.data.total_pages,
+        },
+      } as Action);
     } catch (error) {
       console.error("Error fetching data: ", error);
 
-      setPhotos((prevState) => ({
-        ...prevState,
-        isLoading: false,
-      }));
+      dispatch({
+        type: "FAIL_SEARCH_PHOTO",
+        payload: {
+          error,
+        },
+      } as Action);
     }
   }, []);
 
@@ -47,10 +47,12 @@ function App() {
     const queryParamPage = Number(searchParams.get("page") || "1");
 
     if (queryParamQ) {
-      setPhotos((prevState) => ({
-        ...prevState,
-        isLoading: true,
-      }));
+      dispatch({
+        type: "SET_IS_LOADING",
+        payload: {
+          isLoading: true,
+        },
+      } as Action);
 
       setSearchParams((prevState) => ({
         ...prevState,
@@ -62,12 +64,7 @@ function App() {
 
       searchPhotos(queryParamQ, Number(queryParamPage || "1"));
     } else {
-      setPhotos((prevState) => ({
-        ...prevState,
-        data: [],
-        totalPages: 0,
-        isLoading: false,
-      }));
+      dispatch({ type: "CLEAR" } as Action);
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
