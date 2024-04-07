@@ -10,4 +10,5 @@ export type InitialPhotos = {
   data: Photo[];
   totalPages: number;
   isLoading: boolean;
+  error: string;
 };
