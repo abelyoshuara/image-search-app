@@ -12,6 +12,7 @@ const PhotoItem: FC<PhotoItemProps> = ({ src, alt }) => {
       <Card>
         <Inset clip="padding-box">
           <img
+            data-testid="img"
             src={src}
             alt={alt}
             style={{

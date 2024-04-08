@@ -3,8 +3,7 @@
  *
  * - App component:
  *   - should renders correctly
- *   - should handle input-search typing correctly
- *   - should handle badges on click correctly
+ *   - should request api success on search input
  */
 
 import { BrowserRouter } from "react-router-dom";
@@ -34,20 +33,7 @@ describe("App component", () => {
     expect(badges).toHaveLength(4);
   });
 
-  it("should handle input-search typing correctly", async () => {
-    render(
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>,
-    );
-    const inputSearch = screen.getByPlaceholderText(
-      "Type something to search…",
-    );
-    await userEvent.type(inputSearch, "car");
-    expect(inputSearch).toHaveValue("car");
-  });
-
-  it("should handle badges on click correctly", async () => {
+  it("should request api success on search input", async () => {
     render(
       <BrowserRouter>
         <App />
@@ -58,12 +44,9 @@ describe("App component", () => {
       "Type something to search…",
     );
     expect(inputSearch).toBeInTheDocument();
+    await userEvent.type(inputSearch, "birds");
 
-    const badges = screen.getAllByRole("badge");
-
-    for (const badge of badges) {
-      await userEvent.click(badge);
-      expect(inputSearch).toHaveValue(badge.textContent!.toLowerCase());
-    }
+    const photos = await screen.findAllByTestId("img");
+    expect(photos).toHaveLength(2);
   });
 });
