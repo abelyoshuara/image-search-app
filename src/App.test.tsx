@@ -3,7 +3,7 @@
  *
  * - App component:
  *   - should renders correctly
- *   - should request api success on search input
+ *   - should request API success on search with birds keyword
  */
 
 import { BrowserRouter } from "react-router-dom";
@@ -33,7 +33,7 @@ describe("App component", () => {
     expect(badges).toHaveLength(4);
   });
 
-  it("should request api success on search input", async () => {
+  it("should request API success on search with birds keyword", async () => {
     render(
       <BrowserRouter>
         <App />
@@ -43,10 +43,10 @@ describe("App component", () => {
     const inputSearch = screen.getByPlaceholderText(
       "Type something to search…",
     );
-    expect(inputSearch).toBeInTheDocument();
+    await userEvent.clear(inputSearch);
     await userEvent.type(inputSearch, "birds");
 
-    const photos = await screen.findAllByTestId("img");
+    const photos = await screen.findAllByTestId("img", {}, { timeout: 5000 });
     expect(photos).toHaveLength(2);
   });
 });

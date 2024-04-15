@@ -1,4 +1,5 @@
 import { http, HttpResponse } from "msw";
+const clientId = import.meta.env.VITE_ACCESS_KEY;
 
 export const handlers = [
   http.get("https://api.unsplash.com/search/photos", ({ request }) => {
@@ -13,10 +14,12 @@ export const handlers = [
       page === "1" &&
       perPage === "20" &&
       query === "birds" &&
-      client_id === "123"
+      client_id === clientId
     ) {
       return HttpResponse.json({
-        data: [
+        total: 10000,
+        total_pages: 500,
+        results: [
           {
             id: "cssvEZacHvQ",
             urls: {
