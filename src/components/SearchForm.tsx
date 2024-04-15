@@ -27,16 +27,32 @@ const SearchForm: FC<SearchFormProps> = ({
         />
       </TextField.Root>
       <Flex gap="2" mt="2" justify="center">
-        <Badge onClick={() => onSearchFormRef("nature")} color="orange">
+        <Badge
+          role="badge"
+          onClick={() => onSearchFormRef("nature")}
+          color="orange"
+        >
           Nature
         </Badge>
-        <Badge onClick={() => onSearchFormRef("birds")} color="blue">
+        <Badge
+          role="badge"
+          onClick={() => onSearchFormRef("birds")}
+          color="blue"
+        >
           Birds
         </Badge>
-        <Badge onClick={() => onSearchFormRef("cats")} color="green">
+        <Badge
+          role="badge"
+          onClick={() => onSearchFormRef("cats")}
+          color="green"
+        >
           Cats
         </Badge>
-        <Badge onClick={() => onSearchFormRef("shoes")} color="purple">
+        <Badge
+          role="badge"
+          onClick={() => onSearchFormRef("shoes")}
+          color="purple"
+        >
           Shoes
         </Badge>
       </Flex>
