@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef } from "react";
-import { Flex } from "@radix-ui/themes";
+import { Container, Flex } from "@radix-ui/themes";
 import { useLocation, useSearchParams } from "react-router-dom";
 import Unsplash from "./services/unsplash";
 import Header from "./components/Header";
@@ -95,8 +95,7 @@ function App() {
   };
 
   const currentPage = Number(searchParams.get("page")) || 1;
-  const totalPages = Math.ceil(photos.totalPages / 20);
-  const allPages = generatePagination(currentPage, totalPages);
+  const allPages = generatePagination(currentPage, photos.totalPages);
 
   return (
     <>
@@ -110,27 +109,29 @@ function App() {
       <PhotoList loading={photos.isLoading} photos={photos.data} />
 
       {photos.totalPages > 0 && (
-        <Flex gap="2" justify="center" mt="6" mb="9">
-          {currentPage > 1 && (
-            <PaginationArrow
-              direction="left"
-              href={createPageURL(currentPage - 1)}
-            />
-          )}
+        <Container size={{ initial: "1", sm: "2", md: "3" }}>
+          <Flex gap="2" justify="center" mt="6" mb="9">
+            {currentPage > 1 && (
+              <PaginationArrow
+                direction="left"
+                href={createPageURL(currentPage - 1)}
+              />
+            )}
 
-          <PaginationNumber
-            allPages={allPages}
-            currentPage={currentPage}
-            createPageURL={createPageURL}
-          />
-
-          {currentPage < totalPages && (
-            <PaginationArrow
-              direction="right"
-              href={createPageURL(currentPage + 1)}
+            <PaginationNumber
+              allPages={allPages}
+              currentPage={currentPage}
+              createPageURL={createPageURL}
             />
-          )}
-        </Flex>
+
+            {currentPage < photos.totalPages && (
+              <PaginationArrow
+                direction="right"
+                href={createPageURL(currentPage + 1)}
+              />
+            )}
+          </Flex>
+        </Container>
       )}
     </>
   );
